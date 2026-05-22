@@ -1,7 +1,14 @@
 # ADR-0004 — Voice calibration
 
-- **Status:** Accepted
-- **Date:** 2026-05-22 (iter-27)
+- **Status:** Accepted (amended 2026-05-22 pre iter-29)
+- **Date:** 2026-05-22 (iter-27); amended 2026-05-22 (iter-29 pre-flight)
+
+> **Amendment (2026-05-22):** Tightening the schema and command surface before iter-29a/b implementation. Substantive deltas vs. the original iter-27 ADR:
+> 1. `examples` → `samples` (in JSONB schema, prompt-construction wording, and threshold rules).
+> 2. Per-sample shape changed from `{text, label, weight}` to `{id, candidate_external_id, draft_text, kind, score, created_at}` — unifies seeded defaults and user-labeled real posts under one collection, distinguished by `kind`.
+> 3. `defaults_template: str` (template literal) → `default_voice: str | None` (key into a static `VOICE_DEFAULTS: dict[str, VoiceDefault]` map in code; `None` once defaults are dropped).
+> 4. Threshold simplified: single cut-off at 20 labeled samples (defaults dropped). Removed the two-tier 10-then-20 step — at MVP scale the intermediate de-emphasis is more bookkeeping than signal.
+> 5. `/retune` allowlist made explicit: gated by `ADMIN_TELEGRAM_USER_IDS` env (comma-separated Telegram user IDs).
 
 ## Context
 
@@ -15,17 +22,35 @@ The orthogonal problem is cold-start: requiring 10–20 labeled posts upfront is
 
 ### Mechanics
 
-- **Voice store:** per-user JSONB column on `users` table, schema `{ examples: [{text, label, weight}], defaults_template: str, last_retuned_at: timestamp }`.
-- **Few-shot construction:** for each draft, sample up to 8 examples (weighted by recency × user-label-score), inject into the system prompt as "Past posts from this channel — match this voice."
-- **Pre-built defaults:** 5 templates shipped with the codebase at `prompts/voice_defaults/`:
-  - `python.md`
-  - `devops.md`
-  - `ai_ml.md`
-  - `backend.md`
-  - `security.md`
-- User picks one default at onboarding; the default seeds the `examples` list with 3–5 archetype posts and a description of tone/cadence.
-- As the user labels real posts (≥👍 / ≥👎 inline keyboard responses), examples accumulate. After 10 user-labeled posts, defaults are de-emphasized (weight=0.3); after 20, defaults are dropped entirely.
-- **Re-tune command:** `/retune` admin command samples the last N approved posts and rebuilds the example set. Owner-triggered, not automatic.
+- **Voice store:** per-user JSONB column `voice_store` on `users` table, shape:
+  ```jsonc
+  {
+    "samples": [
+      {
+        "id": "uuid",
+        "candidate_external_id": "string | null",  // null for seeded defaults; source ref otherwise
+        "draft_text": "string",
+        "kind": "default | approved | rejected",
+        "score": "number",                          // +1 / -1 / seed-weight
+        "created_at": "iso8601"
+      }
+    ],
+    "default_voice": "string | null",               // key into VOICE_DEFAULTS map; null once dropped
+    "last_retuned_at": "iso8601 | null"
+  }
+  ```
+- **Few-shot construction:** for each draft, sample up to 8 entries from `samples` (weighted top-k by recency × `score`, with `kind="rejected"` contributing negative weight as "avoid this voice" exemplars), inject into the system prompt as "Past posts from this channel — match this voice."
+- **Pre-built defaults:** static `VOICE_DEFAULTS: dict[str, VoiceDefault]` in code (`llm/voice_defaults.py`), 5 entries keyed by slug:
+  - `python`
+  - `devops`
+  - `ai_ml`
+  - `backend`
+  - `security`
+
+  Each `VoiceDefault` carries a tone/cadence description plus 3–5 archetype draft texts. Source markdown lives at `prompts/voice_defaults/<slug>.md` and is loaded at import time.
+- User picks one slug at onboarding; `voice_store.default_voice` is set to that key, and the matching `VOICE_DEFAULTS[slug]` archetype posts are inserted into `samples` with `kind="default"` and a seed `score` (e.g. 0.5).
+- As the user labels real posts (👍 / 👎 inline-keyboard responses), new samples accumulate with `kind="approved"` / `kind="rejected"` and `score=±1`. **After 20 user-labeled samples** (`kind in ("approved", "rejected")`), default samples are dropped from the prompt and `default_voice` is set to `null`. There is no intermediate de-emphasis step.
+- **Re-tune command:** `/retune` admin command samples the last N approved posts and rebuilds the sample set. Owner-triggered, not automatic. Allowlisted via the `ADMIN_TELEGRAM_USER_IDS` env (comma-separated Telegram user IDs) — non-allowlisted users get a no-op reply.
 
 ### Prompt cache strategy
 
