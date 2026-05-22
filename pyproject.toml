@@ -1,0 +1,59 @@
+[project]
+name = "telegram-tech-publisher"
+version = "0.1.0"
+description = "AI content engine for Telegram developer channels"
+readme = "README.md"
+authors = [
+    { name = "Kirill Terskikh" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "click>=8.1",
+    "fastapi>=0.115",
+    "httpx>=0.27",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.6",
+    "python-telegram-bot>=22.0",
+    "rich>=13.9",
+    "structlog>=24.4",
+    "uvicorn[standard]>=0.32",
+]
+
+[project.scripts]
+telegram-tech-publisher = "telegram_tech_publisher:main"
+
+[build-system]
+requires = ["uv_build>=0.11.14,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "bandit>=1.8",
+    "mypy>=1.13",
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "pytest-cov>=6.0",
+    "respx>=0.21",
+    "ruff>=0.7",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "A", "C4", "SIM", "TCH", "RUF"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unreachable = true
+disallow_any_generics = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+markers = [
+    "integration: tests requiring infra (Postgres, Redis)",
+]
