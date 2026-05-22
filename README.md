@@ -13,6 +13,11 @@ make smoke-github     # poll one repo's releases, print candidates to stdout
 make smoke-telegram   # send "iter-27 smoke" message to test channel
 ```
 
+## Smoke pipelines
+
+- **`make smoke-github`** — polls GitHub releases for one configured repo and prints post candidates to stdout; verifies the GitHub polling substrate (token, API connectivity, release-feed parsing).
+- **`make smoke-telegram`** — sends a test message to the configured Telegram test channel; verifies the publish substrate (bot token, channel permissions, Telegram API connectivity).
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
