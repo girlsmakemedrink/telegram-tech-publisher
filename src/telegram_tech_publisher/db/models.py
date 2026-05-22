@@ -20,19 +20,13 @@ class Base(DeclarativeBase):
 class User(Base):
     __tablename__ = "users"
 
-    id: Mapped[UUID] = mapped_column(
-        PgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     telegram_user_id: Mapped[int] = mapped_column(
         BigInteger, unique=True, index=True, nullable=False
     )
-    voice_store: Mapped[dict[str, Any]] = mapped_column(
-        JSONB, nullable=False, default=dict
-    )
+    voice_store: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
     labeled_count: Mapped[int] = mapped_column(nullable=False, default=0)
-    created_at: Mapped[datetime] = mapped_column(
-        nullable=False, server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(nullable=False, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         nullable=False, server_default=func.now(), onupdate=func.now()
     )

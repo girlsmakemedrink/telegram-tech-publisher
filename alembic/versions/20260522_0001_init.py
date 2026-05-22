@@ -50,9 +50,7 @@ def upgrade() -> None:
         ),
         sa.UniqueConstraint("telegram_user_id", name="uq_users_telegram_user_id"),
     )
-    op.create_index(
-        "ix_users_telegram_user_id", "users", ["telegram_user_id"], unique=False
-    )
+    op.create_index("ix_users_telegram_user_id", "users", ["telegram_user_id"], unique=False)
 
 
 def downgrade() -> None:

@@ -62,9 +62,7 @@ async def test_user_roundtrip(
         await session.commit()
         user_id = user.id
 
-        result = await session.execute(
-            select(User).where(User.telegram_user_id == telegram_id)
-        )
+        result = await session.execute(select(User).where(User.telegram_user_id == telegram_id))
         loaded = result.scalar_one()
         try:
             assert loaded.id == user_id

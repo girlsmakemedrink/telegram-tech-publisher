@@ -85,8 +85,6 @@ def _format_examples_and_candidate(
             f"  published post: {ex.output_text}\n"
         )
     blocks.append(
-        f"Draft a Telegram post for:\n"
-        f"  title: {candidate.title}\n"
-        f"  body: {candidate.body}\n"
+        f"Draft a Telegram post for:\n  title: {candidate.title}\n  body: {candidate.body}\n"
     )
     return "\n".join(blocks)
