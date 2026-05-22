@@ -1,0 +1,27 @@
+extends:
+  - "@commitlint/config-conventional"
+rules:
+  type-enum:
+    - 2
+    - always
+    - [feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert]
+  subject-max-length:
+    - 2
+    - always
+    - 100
+  body-max-line-length:
+    - 1
+    - always
+    - 100
+  # `@commitlint/config-conventional` defaults `subject-case` to reject
+  # sentence-case / start-case / pascal-case / upper-case. That collides
+  # with legitimate technical identifiers in our subject lines:
+  # "TelegramPublisher", "ADR-0003", "MarkdownV2", etc. Drop title-case
+  # policing; keep the rest of conventional-commits discipline.
+  subject-case:
+    - 0
+  # Footers (trailers like `Co-Authored-By:`, `Closes:`) shouldn't be
+  # length-capped — `Co-Authored-By: <Name> <long-email>` legitimately
+  # exceeds 100 chars.
+  footer-max-line-length:
+    - 0
