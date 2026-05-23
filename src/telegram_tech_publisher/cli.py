@@ -14,6 +14,7 @@ from telegram_tech_publisher.config import Settings
 from telegram_tech_publisher.llm.anthropic_client import AnthropicLLMDrafterClient
 from telegram_tech_publisher.llm.voice import load_voice
 from telegram_tech_publisher.loop.config import VOICE_DIR, LoopConfig
+from telegram_tech_publisher.loop.daemon import run_daemon
 from telegram_tech_publisher.loop.drafter import Drafter
 from telegram_tech_publisher.loop.logging import configure_logging
 from telegram_tech_publisher.loop.state import StateStore
@@ -148,6 +149,30 @@ def status_cmd() -> None:
             console.print(f"  {f.started_at:%H:%M} {f.error}")
     else:
         console.print("[green]0 failed ticks in last 24h[/green]")
+
+
+@cli.command("daemon")
+def daemon_cmd() -> None:
+    """Run the autonomous publishing daemon. Blocks until SIGTERM/SIGINT."""
+    settings, state, source, drafter, publisher = _build_loop_components(dry_run=False)
+    loop_cfg = LoopConfig.load(settings.loop_config_path)
+
+    async def _run_one_tick() -> None:
+        await tick(
+            source=source,
+            state=state,
+            drafter=drafter,
+            publisher=publisher,
+            channel_id=settings.telegram_channel_id,
+        )
+
+    asyncio.run(
+        run_daemon(
+            loop_cfg=loop_cfg,
+            channel_id=settings.telegram_channel_id,
+            tick_callable=_run_one_tick,
+        )
+    )
 
 
 def _print_tick_result(result: TickResult) -> None:
