@@ -94,21 +94,21 @@ async def test_retry_after_override(monkeypatch) -> None:
 
     calls = {"n": 0}
 
-    class RateLimit(Exception):
+    class RateLimitError(Exception):
         retry_after = 7.5
 
     async def rl() -> str:
         calls["n"] += 1
         if calls["n"] < 2:
-            raise RateLimit()
+            raise RateLimitError()
         return "ok"
 
     def retry_after(exc: BaseException) -> float | None:
-        return exc.retry_after if isinstance(exc, RateLimit) else None
+        return exc.retry_after if isinstance(exc, RateLimitError) else None
 
     result = await with_retry(
         rl,
-        is_retryable=lambda e: isinstance(e, RateLimit),
+        is_retryable=lambda e: isinstance(e, RateLimitError),
         retry_after=retry_after,
         base_delay=2.0,
         op_name="rl",

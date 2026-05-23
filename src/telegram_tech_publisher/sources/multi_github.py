@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from typing import TYPE_CHECKING
 
-from telegram_tech_publisher.sources.base import Candidate
 from telegram_tech_publisher.sources.github_releases import GitHubReleasesSource
+
+if TYPE_CHECKING:
+    from telegram_tech_publisher.sources.base import Candidate
 
 log = logging.getLogger(__name__)
 
@@ -21,9 +24,7 @@ class MultiGitHubSource:
         self._sources = [GitHubReleasesSource(repo=r, token=token) for r in repos]
 
     async def poll(self) -> list[Candidate]:
-        results = await asyncio.gather(
-            *(s.poll() for s in self._sources), return_exceptions=True
-        )
+        results = await asyncio.gather(*(s.poll() for s in self._sources), return_exceptions=True)
         aggregated: list[Candidate] = []
         seen: set[tuple[str, str]] = set()
         for repo, result in zip(self._repos, results, strict=True):

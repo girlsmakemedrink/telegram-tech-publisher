@@ -43,9 +43,7 @@ async def test_drafter_passes_voice_block_and_examples_to_client() -> None:
             received["voice_block"] = voice_block
             received["examples"] = examples
             received["candidate"] = candidate
-            return Draft(
-                text="ok", model="m", input_tokens=1, output_tokens=2, cache_read_tokens=3
-            )
+            return Draft(text="ok", model="m", input_tokens=1, output_tokens=2, cache_read_tokens=3)
 
     drafter = Drafter(client=CapturingClient(), voice=_voice())
     draft = await drafter.draft(_candidate())

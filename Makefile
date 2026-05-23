@@ -1,4 +1,4 @@
-.PHONY: dev lint typecheck sec test smoke-github smoke-telegram
+.PHONY: dev lint typecheck sec test smoke-github smoke-telegram tick dry-run status validate daemon
 
 dev:
 	uv sync
@@ -22,3 +22,18 @@ smoke-github:
 
 smoke-telegram:
 	uv run python -m telegram_tech_publisher.cli smoke-telegram
+
+tick:
+	uv run telegram-tech-publisher tick
+
+dry-run:
+	uv run telegram-tech-publisher dry-run
+
+status:
+	uv run telegram-tech-publisher status
+
+validate:
+	uv run telegram-tech-publisher validate
+
+daemon:
+	uv run telegram-tech-publisher daemon

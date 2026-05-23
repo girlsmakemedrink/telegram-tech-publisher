@@ -30,9 +30,7 @@ def test_settings_rejects_short_token(monkeypatch: pytest.MonkeyPatch) -> None:
         Settings(_env_file=None)  # type: ignore[call-arg]
 
 
-def test_settings_loads_new_loop_fields(
-    monkeypatch: pytest.MonkeyPatch, tmp_path
-) -> None:
+def test_settings_loads_new_loop_fields(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
     monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "0123456789abcdef")
     monkeypatch.setenv("TELEGRAM_CHANNEL_ID", "@my_channel")
     monkeypatch.setenv("TELEGRAM_TEST_CHANNEL_ID", "@test_channel")

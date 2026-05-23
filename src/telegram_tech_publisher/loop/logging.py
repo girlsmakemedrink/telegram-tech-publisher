@@ -5,9 +5,12 @@ from __future__ import annotations
 import logging
 import logging.handlers
 import sys
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import structlog
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def configure_logging(state_dir: Path | None, level: str = "INFO") -> None:
@@ -35,9 +38,7 @@ def configure_logging(state_dir: Path | None, level: str = "INFO") -> None:
             structlog.processors.format_exc_info,
             structlog.processors.JSONRenderer(),
         ],
-        wrapper_class=structlog.make_filtering_bound_logger(
-            getattr(logging, level.upper())
-        ),
+        wrapper_class=structlog.make_filtering_bound_logger(getattr(logging, level.upper())),
         logger_factory=structlog.stdlib.LoggerFactory(),
         cache_logger_on_first_use=True,
     )

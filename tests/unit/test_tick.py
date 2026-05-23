@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -11,6 +11,9 @@ from telegram_tech_publisher.llm.client import Draft
 from telegram_tech_publisher.loop.state import StateStore
 from telegram_tech_publisher.loop.tick import TickOutcome, tick
 from telegram_tech_publisher.sources.base import Candidate
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class _FakeSource:
@@ -72,17 +75,13 @@ async def test_publishes_first_unseen_candidate(store: StateStore) -> None:
     drafter = _FakeDrafter()
     pub = _FakePublisher()
 
-    result = await tick(
-        source=src, state=store, drafter=drafter, publisher=pub, channel_id="@c"
-    )
+    result = await tick(source=src, state=store, drafter=drafter, publisher=pub, channel_id="@c")
 
     assert result.outcome is TickOutcome.PUBLISHED
     assert result.message_id == 99
     assert drafter.calls == 1
     assert pub.calls == 1
-    assert store.is_published("github_releases", "a") or store.is_published(
-        "github_releases", "b"
-    )
+    assert store.is_published("github_releases", "a") or store.is_published("github_releases", "b")
 
 
 @pytest.mark.asyncio
@@ -103,9 +102,7 @@ async def test_skips_already_published(store: StateStore) -> None:
     drafter = _FakeDrafter()
     pub = _FakePublisher()
 
-    result = await tick(
-        source=src, state=store, drafter=drafter, publisher=pub, channel_id="@c"
-    )
+    result = await tick(source=src, state=store, drafter=drafter, publisher=pub, channel_id="@c")
 
     assert result.outcome is TickOutcome.NOOP
     assert drafter.calls == 0
@@ -118,9 +115,7 @@ async def test_empty_poll_returns_noop(store: StateStore) -> None:
     drafter = _FakeDrafter()
     pub = _FakePublisher()
 
-    result = await tick(
-        source=src, state=store, drafter=drafter, publisher=pub, channel_id="@c"
-    )
+    result = await tick(source=src, state=store, drafter=drafter, publisher=pub, channel_id="@c")
     assert result.outcome is TickOutcome.NOOP
 
 
@@ -130,9 +125,7 @@ async def test_text_too_long_marks_failed(store: StateStore) -> None:
     drafter = _FakeDrafter(text="x" * 5000)
     pub = _FakePublisher()
 
-    result = await tick(
-        source=src, state=store, drafter=drafter, publisher=pub, channel_id="@c"
-    )
+    result = await tick(source=src, state=store, drafter=drafter, publisher=pub, channel_id="@c")
     assert result.outcome is TickOutcome.FAILED
     assert "too long" in (result.error or "").lower()
     assert pub.calls == 0
@@ -145,9 +138,7 @@ async def test_publish_failure_does_not_mark_published(store: StateStore) -> Non
     drafter = _FakeDrafter()
     pub = _FakePublisher(fail_with=RuntimeError("telegram boom"))
 
-    result = await tick(
-        source=src, state=store, drafter=drafter, publisher=pub, channel_id="@c"
-    )
+    result = await tick(source=src, state=store, drafter=drafter, publisher=pub, channel_id="@c")
     assert result.outcome is TickOutcome.FAILED
     assert store.is_published("github_releases", "a") is False
 

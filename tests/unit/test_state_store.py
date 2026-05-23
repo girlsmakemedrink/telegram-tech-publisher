@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
 from telegram_tech_publisher.loop.state import StateStore
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @pytest.fixture
@@ -36,18 +39,18 @@ def test_mark_then_is_published_true(store: StateStore) -> None:
 
 
 def test_mark_twice_same_external_id_raises(store: StateStore) -> None:
-    common = dict(
-        source="github_releases",
-        external_id="ext-dup",
-        candidate_title="t",
-        candidate_url="https://x",
-        channel_id="@c",
-        message_id=42,
-        model="m",
-        input_tokens=0,
-        output_tokens=0,
-        cache_read_tokens=0,
-    )
+    common = {
+        "source": "github_releases",
+        "external_id": "ext-dup",
+        "candidate_title": "t",
+        "candidate_url": "https://x",
+        "channel_id": "@c",
+        "message_id": 42,
+        "model": "m",
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "cache_read_tokens": 0,
+    }
     store.mark_published(**common)
     with pytest.raises(Exception) as excinfo:
         store.mark_published(**common)
@@ -78,9 +81,7 @@ def test_failed_ticks_filters_by_since(store: StateStore) -> None:
     recent = now - timedelta(minutes=5)
 
     store.record_tick_run(started_at=old, finished_at=old, outcome="failed", error="old")
-    store.record_tick_run(
-        started_at=recent, finished_at=recent, outcome="failed", error="recent"
-    )
+    store.record_tick_run(started_at=recent, finished_at=recent, outcome="failed", error="recent")
     store.record_tick_run(started_at=recent, finished_at=recent, outcome="published")
 
     rows = store.failed_ticks(since=now - timedelta(hours=1))

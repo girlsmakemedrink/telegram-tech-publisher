@@ -3,14 +3,18 @@
 from __future__ import annotations
 
 import traceback
-from pathlib import Path
+from typing import TYPE_CHECKING
 
-import pytest
 import respx
 from click.testing import CliRunner
 
 from telegram_tech_publisher.cli import cli
 from telegram_tech_publisher.loop.state import StateStore
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    import pytest
 
 
 @respx.mock
@@ -77,9 +81,7 @@ def test_validate_publishes_one_post_end_to_end(
         },
     )
 
-    respx.post(
-        "https://api.telegram.org/bot0123456789abcdef/sendMessage"
-    ).respond(
+    respx.post("https://api.telegram.org/bot0123456789abcdef/sendMessage").respond(
         200,
         json={
             "ok": True,

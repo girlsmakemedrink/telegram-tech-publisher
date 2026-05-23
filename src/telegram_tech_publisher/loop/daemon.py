@@ -4,14 +4,17 @@ from __future__ import annotations
 
 import asyncio
 import signal
-from collections.abc import Awaitable, Callable
+from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
 
 import structlog
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
-from telegram_tech_publisher.loop.config import LoopConfig
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
+    from telegram_tech_publisher.loop.config import LoopConfig
 
 log = structlog.get_logger(__name__)
 
@@ -56,9 +59,7 @@ async def run_daemon(
         log.info("daemon.trigger_registered", time=entry, tz=loop_cfg.timezone)
 
     scheduler.start()
-    log.info(
-        "daemon.started", channel_id=channel_id, tick_count=len(loop_cfg.schedule)
-    )
+    log.info("daemon.started", channel_id=channel_id, tick_count=len(loop_cfg.schedule))
     try:
         await _wait_for_shutdown()
     finally:

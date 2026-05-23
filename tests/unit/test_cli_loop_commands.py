@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 
-import pytest
 from click.testing import CliRunner
 
 from telegram_tech_publisher.cli import cli
 from telegram_tech_publisher.loop.state import StateStore
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    import pytest
 
 
 def _set_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -69,9 +73,7 @@ def test_daemon_command_registers_triggers_and_exits_on_signal(
         def shutdown(self, **__) -> None:
             pass
 
-    monkeypatch.setattr(
-        "telegram_tech_publisher.loop.daemon.AsyncIOScheduler", _FakeScheduler
-    )
+    monkeypatch.setattr("telegram_tech_publisher.loop.daemon.AsyncIOScheduler", _FakeScheduler)
 
     async def _no_wait() -> None:
         return None
@@ -88,9 +90,7 @@ def test_daemon_command_registers_triggers_and_exits_on_signal(
     assert any("tick-09:30" in t for t in triggers_registered)
 
 
-def test_status_shows_recent_post(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_status_shows_recent_post(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     _set_env(monkeypatch, tmp_path)
     store = StateStore(tmp_path / "state.db")
     store.mark_published(

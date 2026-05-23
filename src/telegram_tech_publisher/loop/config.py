@@ -39,9 +39,7 @@ class LoopConfig:
             raise LoopConfigError("`voice` must be a non-empty string")
         voice_file = VOICE_DIR / f"{voice}.md"
         if not voice_file.exists():
-            raise LoopConfigError(
-                f"voice slug {voice!r} has no matching file at {voice_file}"
-            )
+            raise LoopConfigError(f"voice slug {voice!r} has no matching file at {voice_file}")
 
         timezone = data.get("timezone")
         if not isinstance(timezone, str) or not timezone:
@@ -52,16 +50,12 @@ class LoopConfig:
             raise LoopConfigError("`schedule` must be a non-empty list of HH:MM strings")
         for entry in schedule:
             if not isinstance(entry, str) or not _HHMM_RE.match(entry):
-                raise LoopConfigError(
-                    f"schedule entry {entry!r} is not a valid HH:MM (24h) string"
-                )
+                raise LoopConfigError(f"schedule entry {entry!r} is not a valid HH:MM (24h) string")
 
         sources = data.get("sources", {})
         github_repos_raw = sources.get("github_repos", [])
         if not isinstance(github_repos_raw, list) or not github_repos_raw:
-            raise LoopConfigError(
-                "at least one [[sources.github_repos]] entry is required"
-            )
+            raise LoopConfigError("at least one [[sources.github_repos]] entry is required")
         repos: list[str] = []
         for item in github_repos_raw:
             if not isinstance(item, dict) or "repo" not in item:
@@ -70,11 +64,7 @@ class LoopConfig:
                 )
             r = item["repo"]
             if not isinstance(r, str) or not _REPO_RE.match(r):
-                raise LoopConfigError(
-                    f"repo {r!r} is not a valid owner/repo string"
-                )
+                raise LoopConfigError(f"repo {r!r} is not a valid owner/repo string")
             repos.append(r)
 
-        return cls(
-            voice=voice, timezone=timezone, schedule=list(schedule), github_repos=repos
-        )
+        return cls(voice=voice, timezone=timezone, schedule=list(schedule), github_repos=repos)

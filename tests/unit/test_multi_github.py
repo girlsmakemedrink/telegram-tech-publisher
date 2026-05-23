@@ -53,9 +53,7 @@ async def test_poll_dedupes_by_source_and_external_id() -> None:
 @respx.mock
 @pytest.mark.asyncio
 async def test_one_repo_failure_does_not_kill_others() -> None:
-    respx.get("https://api.github.com/repos/a/x/releases").respond(
-        500, json={"message": "boom"}
-    )
+    respx.get("https://api.github.com/repos/a/x/releases").respond(500, json={"message": "boom"})
     respx.get("https://api.github.com/repos/b/y/releases").respond(
         200, json=[_release_json(7, "y-7", "b/y")]
     )

@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from textwrap import dedent
+from typing import TYPE_CHECKING
 
 import pytest
 
 from telegram_tech_publisher.llm.voice import VoiceLoadError, load_voice
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 def _write_voice(tmp_path: Path, body: str, slug: str = "test") -> Path:

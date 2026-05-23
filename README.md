@@ -1,22 +1,31 @@
 # telegram-tech-publisher
 
-AI content engine for Telegram developer channels. Curates from GitHub releases + HN, drafts in the channel's voice, ships 3 posts/day.
+AI content engine for Telegram developer channels. Curates from GitHub releases, drafts in the channel's voice with Anthropic Sonnet, ships posts on a schedule.
 
-**Status:** iter-27 bootstrap (2026-05-22). Foundational docs + two smoke pipelines only — not production-ready. See `docs/PRD.md` for product scope and `docs/iterations/` (in the [ai_team repo](https://github.com/girlsmakemedrink/ai_team)) for iteration history.
+**Status:** autonomous publishing loop (single channel) shipped 2026-05-23. PRD-MVP scheduler + multi-tenant + approval queue parked until iter-30+. See `docs/PRD.md` for product scope and `docs/superpowers/specs/2026-05-23-autonomous-publishing-loop-design.md` for the loop spec.
 
 ## Quickstart (dev)
 
 ```bash
-uv sync
-cp .env.example .env  # fill in TELEGRAM_BOT_TOKEN + TELEGRAM_TEST_CHANNEL_ID + GITHUB_TOKEN
-make smoke-github     # poll one repo's releases, print candidates to stdout
-make smoke-telegram   # send "iter-27 smoke" message to test channel
+make dev                                # uv sync + cp .env.example .env
+# edit .env: add TELEGRAM_BOT_TOKEN, TELEGRAM_CHANNEL_ID, GITHUB_TOKEN, ANTHROPIC_API_KEY
+make smoke-github                       # poll one repo, print candidates
+make smoke-telegram                     # send "iter-27 smoke" message to test channel
 ```
 
-## Smoke pipelines
+## Autonomous publishing loop
 
-- **`make smoke-github`** — polls GitHub releases for one configured repo and prints post candidates to stdout; verifies the GitHub polling substrate (token, API connectivity, release-feed parsing).
-- **`make smoke-telegram`** — sends a test message to the configured Telegram test channel; verifies the publish substrate (bot token, channel permissions, Telegram API connectivity).
+Edit `config/loop.toml` to set the timezone, daily fire times, and repo list.
+
+```bash
+make validate                           # one end-to-end tick into TELEGRAM_CHANNEL_ID
+make status                             # last 10 posts + failed ticks (24h)
+make dry-run                            # one tick, skip send_message (prints draft)
+make tick                               # one tick, publish if fresh candidate
+make daemon                             # blocking long-running daemon
+```
+
+To run the daemon as a system service (survives logout/reboot), see `ops/README.md` (`launchd` on macOS, `systemd` on Linux).
 
 ## License
 

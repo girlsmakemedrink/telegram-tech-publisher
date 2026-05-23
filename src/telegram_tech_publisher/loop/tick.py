@@ -14,18 +14,20 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from enum import Enum
-from typing import Protocol
+from enum import StrEnum
+from typing import TYPE_CHECKING, Protocol
 
 import anthropic
 import httpx
 import structlog
 import telegram.error
 
-from telegram_tech_publisher.llm.client import Draft
 from telegram_tech_publisher.loop.retry import with_retry
-from telegram_tech_publisher.loop.state import StateStore
-from telegram_tech_publisher.sources.base import Candidate
+
+if TYPE_CHECKING:
+    from telegram_tech_publisher.llm.client import Draft
+    from telegram_tech_publisher.loop.state import StateStore
+    from telegram_tech_publisher.sources.base import Candidate
 
 log = structlog.get_logger(__name__)
 
@@ -82,7 +84,7 @@ class _PublisherProto(Protocol):
     async def send(self, text: str) -> int: ...
 
 
-class TickOutcome(str, Enum):
+class TickOutcome(StrEnum):
     PUBLISHED = "published"
     NOOP = "noop"
     FAILED = "failed"
@@ -110,9 +112,7 @@ async def tick(
     log.info("tick.start", scheduled_at=started.isoformat(), dry_run=dry_run)
 
     try:
-        candidates = await with_retry(
-            source.poll, is_retryable=_github_retryable, op_name="poll"
-        )
+        candidates = await with_retry(source.poll, is_retryable=_github_retryable, op_name="poll")
     except Exception as exc:
         err = f"poll failed: {exc!r}"
         log.error("tick.poll_failed", error=err)
@@ -132,9 +132,7 @@ async def tick(
     )
 
     if not unseen:
-        state.record_tick_run(
-            started_at=started, finished_at=datetime.now(UTC), outcome="noop"
-        )
+        state.record_tick_run(started_at=started, finished_at=datetime.now(UTC), outcome="noop")
         log.info("tick.noop")
         return TickResult(TickOutcome.NOOP, None, None, None, None)
 
@@ -178,23 +176,17 @@ async def tick(
             candidate_external_id=chosen.external_id,
             error=err,
         )
-        return TickResult(
-            TickOutcome.FAILED, chosen.external_id, None, draft.text, err
-        )
+        return TickResult(TickOutcome.FAILED, chosen.external_id, None, draft.text, err)
 
     if dry_run:
-        log.info(
-            "tick.dry_run", external_id=chosen.external_id, length=len(draft.text)
-        )
+        log.info("tick.dry_run", external_id=chosen.external_id, length=len(draft.text))
         state.record_tick_run(
             started_at=started,
             finished_at=datetime.now(UTC),
             outcome="noop",
             candidate_external_id=chosen.external_id,
         )
-        return TickResult(
-            TickOutcome.PUBLISHED, chosen.external_id, None, draft.text, None
-        )
+        return TickResult(TickOutcome.PUBLISHED, chosen.external_id, None, draft.text, None)
 
     try:
         message_id = await with_retry(
@@ -213,9 +205,7 @@ async def tick(
             candidate_external_id=chosen.external_id,
             error=err,
         )
-        return TickResult(
-            TickOutcome.FAILED, chosen.external_id, None, draft.text, err
-        )
+        return TickResult(TickOutcome.FAILED, chosen.external_id, None, draft.text, err)
 
     try:
         state.mark_published(
@@ -253,6 +243,4 @@ async def tick(
         output_tokens=draft.output_tokens,
         cache_read_tokens=draft.cache_read_tokens,
     )
-    return TickResult(
-        TickOutcome.PUBLISHED, chosen.external_id, message_id, draft.text, None
-    )
+    return TickResult(TickOutcome.PUBLISHED, chosen.external_id, message_id, draft.text, None)

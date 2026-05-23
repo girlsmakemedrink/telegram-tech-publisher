@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
-from telegram_tech_publisher.llm.client import Draft, LLMDrafterClient
-from telegram_tech_publisher.llm.voice import Voice
-from telegram_tech_publisher.sources.base import Candidate
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from telegram_tech_publisher.llm.client import Draft, LLMDrafterClient
+    from telegram_tech_publisher.llm.voice import Voice
+    from telegram_tech_publisher.sources.base import Candidate
 
 
 class Drafter:

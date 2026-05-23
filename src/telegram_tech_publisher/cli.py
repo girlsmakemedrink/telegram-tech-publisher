@@ -64,9 +64,7 @@ def _build_loop_components(
 ) -> tuple[Settings, StateStore, MultiGitHubSource, Drafter, TelegramPublisher]:
     settings = Settings()  # type: ignore[call-arg]
     if not settings.anthropic_api_key and not dry_run:
-        raise click.UsageError(
-            "ANTHROPIC_API_KEY is required for tick / validate / daemon"
-        )
+        raise click.UsageError("ANTHROPIC_API_KEY is required for tick / validate / daemon")
     configure_logging(settings.state_dir, level=settings.log_level)
 
     loop_cfg = LoopConfig.load(settings.loop_config_path)
@@ -171,9 +169,7 @@ def validate_cmd() -> None:
         console.print(f"[bold green]channel URL:[/bold green] {url}")
         raise SystemExit(0)
     if result.outcome is TickOutcome.NOOP:
-        console.print(
-            "[yellow]no fresh candidates — validate cannot complete[/yellow]"
-        )
+        console.print("[yellow]no fresh candidates — validate cannot complete[/yellow]")
         raise SystemExit(2)
     raise SystemExit(1)
 
