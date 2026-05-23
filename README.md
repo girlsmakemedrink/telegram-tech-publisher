@@ -1,6 +1,6 @@
 # telegram-tech-publisher
 
-AI content engine for Telegram developer channels. Curates from GitHub releases, drafts in the channel's voice with Anthropic Sonnet, ships posts on a schedule.
+AI content engine for Telegram developer channels. Curates from GitHub releases, drafts in the channel's voice (via the Claude Code CLI by default, or the Anthropic API), ships posts on a schedule.
 
 **Status:** autonomous publishing loop (single channel) shipped 2026-05-23. PRD-MVP scheduler + multi-tenant + approval queue parked until iter-30+. See `docs/PRD.md` for product scope and `docs/superpowers/specs/2026-05-23-autonomous-publishing-loop-design.md` for the loop spec.
 
@@ -8,7 +8,9 @@ AI content engine for Telegram developer channels. Curates from GitHub releases,
 
 ```bash
 make dev                                # uv sync + cp .env.example .env
-# edit .env: add TELEGRAM_BOT_TOKEN, TELEGRAM_CHANNEL_ID, GITHUB_TOKEN, ANTHROPIC_API_KEY
+# edit .env: add TELEGRAM_BOT_TOKEN, TELEGRAM_CHANNEL_ID, GITHUB_TOKEN
+# DRAFTER_BACKEND defaults to "claude_code" (uses the local `claude` CLI; no API key).
+# Set DRAFTER_BACKEND=anthropic + ANTHROPIC_API_KEY to use api.anthropic.com instead.
 make smoke-github                       # poll one repo, print candidates
 make smoke-telegram                     # send "iter-27 smoke" message to test channel
 ```

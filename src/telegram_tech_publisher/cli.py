@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import UTC, datetime, timedelta
+from typing import TYPE_CHECKING
 
 import click
 from rich.console import Console
@@ -12,6 +13,8 @@ from telegram import Bot
 
 from telegram_tech_publisher.config import Settings
 from telegram_tech_publisher.llm.anthropic_client import AnthropicLLMDrafterClient
+from telegram_tech_publisher.llm.claude_code import ClaudeCodeLLMDrafterClient
+from telegram_tech_publisher.llm.mock import MockLLMDrafterClient
 from telegram_tech_publisher.llm.voice import load_voice
 from telegram_tech_publisher.loop.config import VOICE_DIR, LoopConfig
 from telegram_tech_publisher.loop.daemon import run_daemon
@@ -22,6 +25,9 @@ from telegram_tech_publisher.loop.tick import TickOutcome, TickResult, tick
 from telegram_tech_publisher.publishers.telegram import TelegramPublisher
 from telegram_tech_publisher.sources.github_releases import GitHubReleasesSource
 from telegram_tech_publisher.sources.multi_github import MultiGitHubSource
+
+if TYPE_CHECKING:
+    from telegram_tech_publisher.llm.client import LLMDrafterClient
 
 console = Console()
 
@@ -59,12 +65,26 @@ def smoke_telegram() -> None:
 # ----- loop commands -----
 
 
+def _build_drafter_client(settings: Settings) -> LLMDrafterClient:
+    backend = settings.drafter_backend
+    if backend == "anthropic":
+        if not settings.anthropic_api_key:
+            raise click.UsageError("DRAFTER_BACKEND=anthropic requires ANTHROPIC_API_KEY in env")
+        return AnthropicLLMDrafterClient(api_key=settings.anthropic_api_key)
+    if backend == "claude_code":
+        return ClaudeCodeLLMDrafterClient(
+            binary=settings.claude_code_binary,
+            timeout_seconds=settings.claude_code_timeout_seconds,
+        )
+    if backend == "mock":
+        return MockLLMDrafterClient()
+    raise click.UsageError(f"unknown DRAFTER_BACKEND: {backend!r}")
+
+
 def _build_loop_components(
     *, dry_run: bool
 ) -> tuple[Settings, StateStore, MultiGitHubSource, Drafter, TelegramPublisher]:
     settings = Settings()  # type: ignore[call-arg]
-    if not settings.anthropic_api_key and not dry_run:
-        raise click.UsageError("ANTHROPIC_API_KEY is required for tick / validate / daemon")
     configure_logging(settings.state_dir, level=settings.log_level)
 
     loop_cfg = LoopConfig.load(settings.loop_config_path)
@@ -72,7 +92,7 @@ def _build_loop_components(
 
     state = StateStore(settings.state_dir / "state.db")
     source = MultiGitHubSource(repos=loop_cfg.github_repos, token=settings.github_token)
-    llm = AnthropicLLMDrafterClient(api_key=settings.anthropic_api_key or "dry-run")
+    llm = _build_drafter_client(settings)
     drafter = Drafter(client=llm, voice=voice)
 
     bot = Bot(token=settings.telegram_bot_token)

@@ -47,6 +47,7 @@ def test_validate_publishes_one_post_end_to_end(
     monkeypatch.setenv("TELEGRAM_TEST_CHANNEL_ID", "-1001234567890")
     monkeypatch.setenv("GITHUB_TOKEN", "ghp_0123456789abcdef")
     monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-test")
+    monkeypatch.setenv("DRAFTER_BACKEND", "anthropic")
     monkeypatch.setenv("STATE_DIR", str(tmp_path))
     monkeypatch.setenv("LOOP_CONFIG_PATH", str(loop_toml))
 
