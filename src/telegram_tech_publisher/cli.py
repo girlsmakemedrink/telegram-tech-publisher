@@ -151,6 +151,42 @@ def status_cmd() -> None:
         console.print("[green]0 failed ticks in last 24h[/green]")
 
 
+@cli.command("validate")
+def validate_cmd() -> None:
+    """One-shot end-to-end smoke into the configured channel. Exits non-zero on any failure."""
+    settings, state, source, drafter, publisher = _build_loop_components(dry_run=False)
+    result = asyncio.run(
+        tick(
+            source=source,
+            state=state,
+            drafter=drafter,
+            publisher=publisher,
+            channel_id=settings.telegram_channel_id,
+        )
+    )
+    _print_tick_result(result)
+
+    if result.outcome is TickOutcome.PUBLISHED and result.message_id is not None:
+        url = _telegram_message_url(settings.telegram_channel_id, result.message_id)
+        console.print(f"[bold green]channel URL:[/bold green] {url}")
+        raise SystemExit(0)
+    if result.outcome is TickOutcome.NOOP:
+        console.print(
+            "[yellow]no fresh candidates — validate cannot complete[/yellow]"
+        )
+        raise SystemExit(2)
+    raise SystemExit(1)
+
+
+def _telegram_message_url(channel_id: str, message_id: int) -> str:
+    """Compose a viewable URL from chat_id + message_id."""
+    if channel_id.startswith("@"):
+        return f"https://t.me/{channel_id[1:]}/{message_id}"
+    if channel_id.startswith("-100"):
+        return f"https://t.me/c/{channel_id[4:]}/{message_id}"
+    return f"chat_id={channel_id} message_id={message_id}"
+
+
 @cli.command("daemon")
 def daemon_cmd() -> None:
     """Run the autonomous publishing daemon. Blocks until SIGTERM/SIGINT."""
