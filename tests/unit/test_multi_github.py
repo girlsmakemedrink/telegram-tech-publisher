@@ -66,13 +66,27 @@ async def test_one_repo_failure_does_not_kill_others() -> None:
 
 @respx.mock
 @pytest.mark.asyncio
-async def test_all_repos_failing_returns_empty_list() -> None:
+async def test_all_repos_failing_raises() -> None:
     respx.get("https://api.github.com/repos/a/x/releases").respond(500)
     respx.get("https://api.github.com/repos/b/y/releases").mock(
         side_effect=httpx.ConnectError("network down")
     )
 
     src = MultiGitHubSource(repos=["a/x", "b/y"], token="ghp_test")
-    candidates = await src.poll()
 
-    assert candidates == []
+    with pytest.raises((httpx.HTTPStatusError, httpx.ConnectError)):
+        await src.poll()
+
+
+@respx.mock
+@pytest.mark.asyncio
+async def test_all_repos_401_raises_http_status_error() -> None:
+    respx.get("https://api.github.com/repos/a/x/releases").respond(401)
+    respx.get("https://api.github.com/repos/b/y/releases").respond(401)
+
+    src = MultiGitHubSource(repos=["a/x", "b/y"], token="ghp_test")
+
+    with pytest.raises(httpx.HTTPStatusError) as exc_info:
+        await src.poll()
+
+    assert exc_info.value.response.status_code == 401

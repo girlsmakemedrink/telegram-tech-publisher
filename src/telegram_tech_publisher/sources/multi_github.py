@@ -27,8 +27,10 @@ class MultiGitHubSource:
         results = await asyncio.gather(*(s.poll() for s in self._sources), return_exceptions=True)
         aggregated: list[Candidate] = []
         seen: set[tuple[str, str]] = set()
+        failures: list[BaseException] = []
         for repo, result in zip(self._repos, results, strict=True):
             if isinstance(result, BaseException):
+                failures.append(result)
                 log.warning(
                     "poll.repo_failed",
                     extra={
@@ -44,4 +46,8 @@ class MultiGitHubSource:
                     continue
                 seen.add(key)
                 aggregated.append(c)
+        # If every repo failed, re-raise the first error so the tick records `failed`
+        # (and the retry layer can decide whether the error type is transient).
+        if failures and len(failures) == len(self._sources):
+            raise failures[0]
         return aggregated
