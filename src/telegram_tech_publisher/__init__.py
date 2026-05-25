@@ -1,2 +1,3 @@
-def main() -> None:
-    print("Hello from telegram-tech-publisher!")
+from telegram_tech_publisher.cli import cli as main
+
+__all__ = ["main"]

@@ -1,0 +1,41 @@
+# Loop runtime config. Edit to tune.
+
+# Voice slug (filename stem under src/telegram_tech_publisher/llm/voice/)
+voice = "devops"
+
+# IANA timezone string for the schedule
+timezone = "Europe/Moscow"
+
+# Daily HH:MM (24h) fire times in the configured timezone
+schedule = ["09:30", "13:30", "18:00"]
+
+# GitHub repositories to poll for releases
+[[sources.github_repos]]
+repo = "anthropics/anthropic-sdk-python"
+
+[[sources.github_repos]]
+repo = "encode/httpx"
+
+[[sources.github_repos]]
+repo = "kubernetes/kubernetes"
+
+[[sources.github_repos]]
+repo = "hashicorp/terraform"
+
+[[sources.github_repos]]
+repo = "grafana/grafana"
+
+[[sources.github_repos]]
+repo = "prometheus/prometheus"
+
+[[sources.github_repos]]
+repo = "etcd-io/etcd"
+
+[[sources.github_repos]]
+repo = "argoproj/argo-cd"
+
+[[sources.github_repos]]
+repo = "containerd/containerd"
+
+[[sources.github_repos]]
+repo = "tektoncd/pipeline"
