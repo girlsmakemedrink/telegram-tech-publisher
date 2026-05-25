@@ -7,7 +7,7 @@ voice = "devops"
 timezone = "Europe/Moscow"
 
 # Daily HH:MM (24h) fire times in the configured timezone
-schedule = ["09:30", "13:30", "18:00"]
+schedule = ["09:30", "13:30", "16:30"]
 
 # GitHub repositories to poll for releases
 [[sources.github_repos]]
