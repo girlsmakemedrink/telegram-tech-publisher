@@ -13,7 +13,7 @@ Lifecycle:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from typing import TYPE_CHECKING, Protocol
 
@@ -68,7 +68,10 @@ def _telegram_retryable(exc: BaseException) -> bool:
 
 def _telegram_retry_after(exc: BaseException) -> float | None:
     if isinstance(exc, telegram.error.RetryAfter):
-        return float(exc.retry_after)
+        wait = exc.retry_after
+        if isinstance(wait, timedelta):
+            return wait.total_seconds()
+        return float(wait)
     return None
 
 
